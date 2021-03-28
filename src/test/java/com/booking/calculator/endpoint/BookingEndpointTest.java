@@ -8,6 +8,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -25,7 +27,7 @@ import java.util.Collection;
 @WebAppConfiguration
 @ContextConfiguration(classes = BookingCalculatorApplication.class)
 public class BookingEndpointTest {
-
+    private Logger log = LoggerFactory.getLogger(BookingEndpointTest.class);
     @Parameter
     public Integer numberOfPremiumRooms;
     @Parameter(value = 1)

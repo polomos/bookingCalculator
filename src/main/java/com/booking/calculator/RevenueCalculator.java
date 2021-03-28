@@ -11,64 +11,72 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 public class RevenueCalculator {
+    private Logger log = LoggerFactory.getLogger(RevenueCalculator.class);
 
     @Value("${minimum.price.for.premium:100}")
     private Integer minimumPriceForPremium;
 
     private Predicate<Integer> canBePremium = (v) -> v >= minimumPriceForPremium;
 
-    private Logger log = LoggerFactory.getLogger("SampleLogger");
 
     private final BookingProvider bookingProvider;
 
-    public CalculationResult calculateRevenue(Integer numberOfPremiumRooms, Integer numberOfStandardRooms) {
+    public CalculationResult calculateRevenue(Integer availablePremiumRooms, Integer availableStandardRooms) {
         List<Integer> bookings = bookingProvider.getBookings();
         log.debug("Provided bookings: {}", bookings);
 
         CalculationResult result = new CalculationResult();
 
-        bookPremiumRooms(bookings, numberOfPremiumRooms, result);
-        bookStandardRooms(bookings, numberOfStandardRooms, numberOfPremiumRooms - result.getNumberOfPremiumRooms(), result);
+        bookPremiumRooms(bookings, availablePremiumRooms, result);
+        bookStandardRooms(bookings, availableStandardRooms, availablePremiumRooms - result.getNumberOfPremiumRooms(), result);
 
         return result;
     }
 
-    private void bookStandardRooms(List<Integer> bookings, Integer numberOfStandardRooms, Integer emptyPremiumRooms, CalculationResult result) {
-        List<Integer> roomsBelowLimit = bookings.stream()
+    private void bookStandardRooms(List<Integer> bookings, Integer availableStandardRooms, Integer availablePremiumRoomsAfterBooking, CalculationResult result) {
+        List<Integer> bookingsBelowLimit = bookings.stream()
                 .filter(canBePremium.negate())
                 .sorted(Comparator.reverseOrder())
                 .collect(Collectors.toList());
 
-        if (numberOfStandardRooms > roomsBelowLimit.size() && emptyPremiumRooms > 0) {
-            List<Integer> standardRooms = bookings.stream()
-                    .sorted(Integer::compareTo)
-                    .limit(Math.min(numberOfStandardRooms, bookings.size() - result.getNumberOfPremiumRooms()))
-                    .collect(Collectors.toList());
-            result.setNumberOfStandardRooms(standardRooms.size());
-            result.setStandardRoomIncome(standardRooms.stream().mapToInt(Integer::intValue).sum());
-
+        if (availableStandardRooms > bookingsBelowLimit.size()) {
+            bookingsBelowLimit
+                    .forEach(result::addStandardRoom);
         } else {
-            result.setNumberOfStandardRooms(numberOfStandardRooms);
-            result.setStandardRoomIncome(roomsBelowLimit.stream().limit(numberOfStandardRooms).mapToInt(Integer::intValue).sum());
+            if (availablePremiumRoomsAfterBooking > 0) {
+                int howManyPremiumShouldBeBooked = Math.min(availablePremiumRoomsAfterBooking, bookingsBelowLimit.size()-availableStandardRooms);
+                bookingsBelowLimit.stream()
+                        .limit(howManyPremiumShouldBeBooked)
+                        .forEach(result::addPremiumRoom);
+                bookingsBelowLimit.stream()
+                        .skip(howManyPremiumShouldBeBooked)
+                        .limit(availableStandardRooms)
+                        .forEach(result::addStandardRoom);
+
+            } else {
+                bookingsBelowLimit.stream()
+                        .limit(availableStandardRooms)
+                        .forEach(result::addStandardRoom);
+//                        .collect(Collectors.toList());
+//                result.setNumberOfStandardRooms(standardRooms.size());
+//                result.setStandardRoomIncome(standardRooms.stream().mapToInt(Integer::intValue).sum());
+            }
+
         }
 
 
     }
 
-    private void bookPremiumRooms(List<Integer> bookings, Integer numberOfPremiumRooms, CalculationResult result) {
-        List<Integer> premiumRooms = bookings.stream()
+    private void bookPremiumRooms(List<Integer> bookings, Integer availablePremiumRooms, CalculationResult result) {
+        bookings.stream()
                 .filter(canBePremium)
                 .sorted(Comparator.reverseOrder())
-                .limit(numberOfPremiumRooms)
-                .collect(Collectors.toList());
-
-        result.setNumberOfPremiumRooms(premiumRooms.size());
-        result.setPremiumRoomIncome(premiumRooms.stream().mapToInt(Integer::intValue).sum());
+                .limit(availablePremiumRooms)
+                .forEach(result::addPremiumRoom);
     }
 
 }

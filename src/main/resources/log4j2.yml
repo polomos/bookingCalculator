@@ -8,15 +8,10 @@ Configutation:
         pattern: "%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"
   Loggers:
     Root:
-      level: debug
+      level: warn
       AppenderRef:
         - ref: Console
     Logger:
-      - name: org
-        additivity: false
-        level: warn
-        AppenderRef:
-          - ref: Console
       - name: com.booking.calculator
         additivity: false
         level: debug

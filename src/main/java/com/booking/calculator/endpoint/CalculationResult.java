@@ -15,4 +15,14 @@ public class CalculationResult {
     private int numberOfStandardRooms;
     private int standardRoomIncome;
 
+    public void addPremiumRoom(int roomPrice){
+        this.numberOfPremiumRooms++;
+        this.premiumRoomIncome += roomPrice;
+    }
+
+    public void addStandardRoom(int roomPrice){
+        this.numberOfStandardRooms++;
+        this.standardRoomIncome += roomPrice;
+    }
+
 }
