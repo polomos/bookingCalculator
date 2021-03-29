@@ -16,8 +16,8 @@ public class BookingEndpoint {
     private final RevenueCalculator revenueCalculator;
 
     @RequestMapping("calculate/revenue")
-    public ResponseEntity<CalculationResult> calculateRevenue(@RequestParam(name = "numberOfPremiumRooms") Integer numberOfPremiumRooms,
-                                                              @RequestParam(name = "numberOfStandardRooms") Integer numberOfStandardRooms) {
+    public ResponseEntity<CalculationResult> calculateRevenue(@RequestParam(name = "numberOfPremiumRooms") int numberOfPremiumRooms,
+                                                              @RequestParam(name = "numberOfStandardRooms") int numberOfStandardRooms) {
 
         return ResponseEntity.ok(revenueCalculator.calculateRevenue(numberOfPremiumRooms, numberOfStandardRooms));
     }
